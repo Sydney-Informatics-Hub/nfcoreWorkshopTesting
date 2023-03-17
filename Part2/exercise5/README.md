@@ -4,6 +4,7 @@
 - Discuss the importance of reading the tool documentation for key tools in the workflow to decide on customised parameters
 - Identify which tool parameters are included by nf-core, either hard-coded or customisable as a workflow argument either by command line or parameters file
 - Learn how to specify additional external arguments to a process ie those that are available to the tool but not covered by nf-core arguments
+- Perform a little troubleshooting by exploring QC, workflow code and command file
 
 ---------------------
 ## Testing reflection
@@ -52,33 +53,131 @@ c) View which paramteres are hard-coded within the nextflow process
 	
 Then, if parameters you want to use are not covered by the nf-core parameters or hard-coded in the run command, you can add them using the `ext.args` variable. 
 
-For the sake of the exercise, let's assume we want to increase the minimum quality Phred score from the default of 20 to a much more stringent value of 30. 
+For the sake of the exercise, let's assume we want to increase the minimum quality Phred score from the default of 20 to a much more stringent value of 40 (note for RNAseq researchers, this of course is way too high!). 
 
-Following the Trim Galore user guide, we would do this with the syntax `--quality 30`. 
+Following the Trim Galore user guide, we would do this with the syntax `--quality 40`. 
 
-To parse that to the Trim Galore process, we need to specify this in a custom config, just like we have done for `max_cpus`, `max_memory` and `outdir` in the previous exercises. 
+To parse that to the Trim Galore process, we need to specify this in a custom config, just like we have done for eg `max_cpus`, `max_memory` and `multiqc` in the previous exercises. 
 
-The difference this time is that we want to restrict the usage of the parameter to the only place it makes sense - to the `TRIMGALORE` process. 
+The difference this time is that we want to restrict the usage of the parameter to the only place it makes sense: to the `TRIMGALORE` process. We can do this by using the `withName: <process>` syntax.  
 
-
-Open `nextflow.config` for editing, then add the following content:
+Open a new file `extra_args.config` for editing, then add the following content:
 
 ```bash
+#!/usr/bin/env nextflow
+
+nextflow.enable.dsl=2
+
 process {
-    withName: 'FASTQC_UMITOOLS_TRIMGALORE:TRIMGALORE' {
-        ext.args    =   '--quality 30'
+    withName: ".*:TRIMGALORE"  {    
+        ext.args    =   '--quality 40'
     }
 }
 ``` 
+NOTE TO US - we need to add a part in here about how to find the correct name for a process to specify in the above - my first attempt using the full process name (as per doc) DID NOT WORK. See Troubleshooting section below. Clarify with Chris H then add in ... 
 
-Re-run the previous command specifying `--outdir exercise5`, and observe that this time, since the input data has been changed (more aggressively trimmed), the analysis steps are re-run rather than restored from cache. 
+We need to instruct nextflow to use the custom config, and we do this with the `-c` flag. 
+
+```
+nextflow run \
+    ../rnaseq/main.nf \
+    -profile singularity \
+    -params-file params.yaml \
+    -c extra_args.config \
+    --outdir exercise5 \
+    -resume
+```
+
+Given we have applied the `-resume` flag, what tasks do you expect to be re-run, and what outputs do you expect to be taken from cache?
+- Cached output for initial fastqc
+- Rerun trim and all downstream
+
+How long did your run take? Was the run time what you expected? Do you notice anything different on the STDOUT compared to the previous runs? 
+
+<insert STDOUT screenshots?> 
+
+Open the file multiqc_report.html. 
+
+Option 1: You are working in VS Code
+- Go to extentsions (Control + Shift + X) and install 'Live Server' (Ritwick Dey).
+- On the Explorer pane where you have your working directory open, navigate to the `./exercise5/multiqc/star_salmon` directory and right click the file `multiqc_report.html`. 
+- Select 'Open with Live Server' and the HTML file will open in your browser.
+
+Option 2: You are not working in VS Code
+- Copy the file `./exercise5/multiqc/star_salmon/multiqc_report.html` to your local machine, and double-click it to open in browser
+- Eg for Windows open Gitbash or WSL, for Mac use Terminal. Change directory to Downloads or somewhere else appropriate, then run `scp ubuntu@<IP>:/home/ubuntu/<nfcoreWorkshop>/exercise5/multiqc/star_salmon/multiqc_report.html .`
+
+On the navigation headings on the left, click on `Fail trimmed samples`. Observe that all 6 samples have < 5,000 reads remaining after trimming. 
+
+We can also see this information in a plain text output file: 
+```
+cat ./exercise5/multiqc/star_salmon/multiqc_datamultiqc_fail_trimmed_samples-plot.txt 
+```
+What has caused these samples to fail? 
+
+View the [rnaseq workflow code](https://github.com/nf-core/rnaseq/blob/master/workflows/rnaseq.nf)
+
+Observe line 267 - "Filter channels to get samples that passed minimum trimmed read count"
+
+and 
+
+line 295 - `if (num_reads <= params.min_trimmed_reads)`
+
+Our samples have less reads after trimming than required by the parameter [`min_trimmed_reads`](https://nf-co.re/rnaseq/3.10.1/parameters#min_trimmed_reads) which has a default value of 10,000. 
+
+This highlights the need to thoroughly check your output to ensure that the intended anlysis has been run and the results are what you require. The message `Pipeline completed successfully` (and also exit status of zero for invidual tasks or cluster jobs if you are running on a cluster) indicates that there were no errors running the pipeline, not that your samples have produced the desired output. 
+
+Also note that nf-core has not reported the custom extra argument provided to trimGalore. On your multiqc_report.html file, view the section 'nf-core/rnaseq Workflow Summary'. The quality parameter is not described. 
+
+We can view the full parameters that were supplied to trimgalore in two ways:
+
+Option 1) Trim galore log
+- View one of the log files for a sample. Note that all supplied parameters, including our custom quality threshold of 40, are listed under 'SUMMARISING RUN PARAMETERS'
+```
+more ./exercise5/trimgalore/SRR3473988.fastq.gz_trimming_report.txt
+```
+
+Option 2) command.sh file 
+- Every task that is run is recorded in a file `.command.sh` within the task execution directory. 
+- You can find that file easily if you know the process execution hash. 
+- The hash is used to name the work direcory for a task. 
+- If you know the hash, you can run `ls -la <hash>*` to find the directory and view the hidden command files. 
+
+For example, a task with process execution hash `53/739513`:
+```
+ls -la ./work/53/739513*
+```
+shows the directory listing of `./work/53/739513784564d32ff5c7d798b7c387`, including the relevant `.command.sh` file. 
+
+Viewing this file will show the actual command used to run the task, eg:
+
+< insert screenshot instead of code>
+
+```
+#!/bin/bash -ue
+[ ! -f  SRR3473988.fastq.gz ] && ln -s SRR3473988_selected.fastq.gz SRR3473988.fastq.gz
+trim_galore \
+    --quality 40 \
+    --cores 1 \
+    --gzip \
+    SRR3473988.fastq.gz
+
+cat <<-END_VERSIONS > versions.yml
+"NFCORE_RNASEQ:RNASEQ:FASTQ_FASTQC_UMITOOLS_TRIMGALORE:TRIMGALORE":
+    trimgalore: $(echo $(trim_galore --version 2>&1) | sed 's/^.*version //; s/Last.*$//')
+    cutadapt: $(cutadapt --version)
+END_VERSIONS
+```
+
+
 
 ---------------------
 ## Troubleshooting
 
-The ext.args syntax to trimgalore is not working for me. 
+1) How to know what exact label to use for processes with ext.args?
+2) Why is the param supplied via ext.args not being reported as parameter that differs from defaults (in log, mqc report or stdout)?
 
-I initially tried this in my local `nextflow.config`:
+I initially tried this in my local `nextflow.config`, following [documentation](https://nf-co.re/rnaseq/3.10.1/usage#advanced-option-on-process-level):
 
 ```
 process {
@@ -88,9 +187,9 @@ process {
 }
 ```
 
-However the changed parameter is NOT listed in the 'changed params' section of STDOUT, and the trimglaore reports for the reads show the default value of 20 is still being used. 
+This did not work, gave error 'There's no process matching config selector'
 
-Chris said this worked for him:
+Process label from Chris:
 
 ```
 process {
@@ -100,73 +199,7 @@ process {
 
 ```
 
-I tried this wildcard notation to the process label, and it also did not apply the new quality value. 
-
-Hang on now it did - need to re-test to confirm my sanity, was I editing the right config. BUT that aside, there is a new issue apparent:
-
-The param is NOT listed in STDOUT, but the vlaue of 40 IS now in the trimgalore reads report. YET the STAR data is pulled from cache! The number of reads trimmed is huge (98% for 40 vs ~1% for 20) so WHY IS THE BAM BEING PULLED FROM CACHE. Need to explore this - have just issued a run WITHOUT the resume flag, so that I can directly compare the BAMs
-
-Output dirs - 
-
-Results - the initial, qual not working
-ResultsTEST - using Chris notation, with RESUME flag
-Results40QualNoResume - using Chris notation, with NO resume flag
-
-The above run only took 3.5 minutes to run, because the trimmed reads files were tiny on account of the aggressive trimming. Next, compare the STAR BAMs to demonstrate that the output in ResultsTEST should NOT have been pulled from cache... (not done yet, need to come back to this)
-
-
-The example in the documentation shows to use single quotes around what is supplied to ext.args, but Chris has shown curly brackets. I tried with curly brackets, kinda expecting it to error - it did not error, and once again it did not apply the custom quality value. 
-
-The other parameters specified in my local `nextflow.config` ARE being correctly applied. Here is the full config:
-
-```
-#!/usr/bin/env nextflow
-
-nextflow.enable.dsl=2
-
-singularity {
-    enabled = true
-}
-
-trace.overwrite = true
-dag.overwrite = true
-report.overwrite = true
-timeline.overwrite = true
-
-params.max_cpus = 2
-params.max_memory = '6 GB'
-params.outdir = "Results"
-
-// Produce a workflow diagram and HTML reports  
-dag {
-        enabled = true
-        file = "${params.outdir}/dag.svg"
-}
-report {
-        enabled = true
-        file = "${params.outdir}/report.html"
-}
-timeline {
-        enabled = true
-        file = "${params.outdir}/timeline.html"
-}
-trace {
-        enabled = true
-        file = "${params.outdir}/trace.txt"
-}
-
-// Custom Phred quality threshold for trimming    
-// withName: 'FASTQ_FASTQC_UMITOOLS_TRIMGALORE:TRIMGALORE' 
-process {
-    withName: ".*:TRIMGALORE" {    
-        ext.args    =   '--quality 40'
-    }
-}
-
-```
-
-
-
+Documentation does not describe the wildcard syntax which definitely seems a bit safer and easier to apply... 
 
 ---------------------
 ## Links/resources 
