@@ -2,4 +2,10 @@
 
 ## Learning outcomes 
 
-## Sessions/exercises 
+* View available parameters
+* Add key inputs on the command line
+* Explore workflow setup
+
+## Sessions/exercises
+
+### Exercise 
