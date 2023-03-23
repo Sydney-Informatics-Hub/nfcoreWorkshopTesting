@@ -28,7 +28,7 @@ This repository contains draft materials and details regarding their development
 
 Instances set up using Nimbus bioimage which has Singularity, Nextflow, Docker already installed. 
 
-> **_NOTE:_**  Pawsey are currently updating the BioImage, will provide updated instances when available. Instances will have most recent version of Nextflow installed. 
+> **_NOTE:_**  See `NIMBUSSETUP.md` for instructions on setting up your test instance. 
 
 ### **Download rnaseq pipeline**
 
@@ -75,5 +75,4 @@ A template README.md can be found at: nfcoreWorkshopTesting/exerciseREADME.md
 Any issues with nf-core/rnaseq workflow needs to be submitted as an issue on their GitHub page and shared with Chris Hakkaart. A template for submitting bugs is [here](https://github.com/Sydney-Informatics-Hub/nfcoreWorkshopTesting/blob/main/issueTemplate.md). Please link to all issues below: 
 
 * Email flag broken: https://github.com/nf-core/rnaseq/issues/949 
-* Software_versions.yml not reflecting changes: 
-* TrimGalore parameter broken:  
+* TrimGalore parameter warning: https://github.com/nf-core/rnaseq/issues/961  
