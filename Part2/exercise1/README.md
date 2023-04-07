@@ -22,6 +22,48 @@
 * DONE re-created reference data and STAR indexes. New [Cloudstor link](https://cloudstor.aarnet.edu.au/plus/s/gIBdDhKEwfq2j58/download).
 
 -----------------
+
+## Content draft UPDATED
+
+7/4/23 I am working through each exercise - not wanting to interfere with Georgie's flow, I will make additions/changes here for GS to incorporate:
+
+### Updated exercsie 1 run command 
+
+- Need to ensure that the samplesheet.csv file has the correct path to the fastqs based on final working directory structure
+- Need to sed 'forward' with 'unstranded' within samplesheet.csv 
+- Relative to GS command 
+    - removed the dag/report/trace (rnaseq conf will put them in the params.outdir with timestamp so we dont need to worry about overwrite error/warn) 
+    - replaced samples.tsv with samplesheet.csv
+    - added mm10_reference to materials path 
+    
+```
+nextflow run rnaseq/main.nf \
+    --input $materials/samplesheet.csv \
+    -profile singularity \
+    --fasta $materials/mm10_reference/mm10_chr18.fa \
+    --gtf $materials/mm10_reference/mm10_chr18.gtf \
+    --star_index $materials/mm10_reference/STAR \
+    --max_memory '6 GB' \
+    --max_cpus 2 \
+    --outdir Exercise_1 
+```
+
+### Singularity cache dir
+
+- After the run has completed, show the location of the container image files in `./work/singularity`
+    - This activity may be placed at the end of this exercise or the start of exercise 2
+- Discuss how this is not an ideal location (we may need to periodically clean out the `work` directory to save disk space and inodes) 
+- Run the following commands to move the images and set the cachedir:
+
+```
+mv ./work/singularity ~ 
+ls ~/singularity
+# Add to ~/.bashrc file then save:
+export NXF_SINGULARITY_CACHEDIR=/home/ubuntu/singularity 
+source ~/.bashrc 
+echo $NXF_SINGULARITY_CACHEDIR
+```
+
 ## Content draft 
 
 You can find the parameters for each nf-core workflow on their respective documentation sites. The nf-core/rnaseq workflow parameters can be found [here](https://nf-co.re/rnaseq/3.10.1/parameters). In the case of the nf-core/rnaseq workflow, parameters are grouped based on various stages of the workflow: 
