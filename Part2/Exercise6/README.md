@@ -30,6 +30,87 @@ sudo chmod ugo+rwx /usr/local/bin/nextflow
 ---------------------
 ## Content draft 
 
+### Fill in the launch GUI
+
+- Open the [nf-core launch](https://nf-co.re/launch) web GUI - Select the rnaseq pipeline from the `select a pipeline` menu and select pipeline release `3.10.1` (or whatever is the latest version we have tested on)
+- Select `launch` (insert an image of the blue rocket icon) 
+- VIP: On the far right, unhide `Show hidden params`
+- Leave `name` blank (default will be used, like it has been for our CLI runs so far) 
+- For `profile`, enter `singularity` (also the pawsey nimbus config when ready) 
+- Leave `work-dir` as default, toggle `resume` to true 
+- Under `input`, copy paste the path to the `samplesheet.csv` 
+- For `outdir`, specify `Exercise6`
+- Enter your email address
+- Now scroll through the remaining options, and fill in all of the parameters we have applied via our params file (including the multiqc yaml file!) 
+- CPUs and MEM - this may or may not need to be done manually, if the pawsey nimbus config is available at nf-core then it wont be but if it is not, then need to add these (they are 'hidden parmas') 
+- Once you are satisified that the params are all accounted for (remember that the extra_args.config should have the quality decreased from 40 to 30), click `Launch workflow`
+- Note that you can select `Return to editor` to make changes to your config as required. Also note that if you do this, your `resume` will toggle back to `false`, your `profile` will have cleared itself, and the hidden parameters will have re-hidden themselves!
+
+### Launch the workflow with the 'Launching with no internet and without nf-core/tools' option 
+
+- Because we are on a VM, which has internet connection, we could use the first option 'If your system has an internet connection'
+- However, as this was covered in Part 1, we will practice with the 'no internet connection' option, which is usually the case if you are running on a HPC. 
+- Follow the instructions for this method:
+  - Copy the JSON params to a file in your working directory and save it as `nf-params.json`
+  - Copy the nextflow run command and execute it in your VM
+  
+  
+  ```
+  
+  {
+    "input": "\/home\/ubuntu\/materials\/samplesheet.csv",
+    "outdir": "Exercise6",
+    "email": "cali.willet@sydney.edu.au",
+    "fasta": "\/home\/ubuntu\/materials\/mm10_reference\/mm10_chr18.fa",
+    "gtf": "\/home\/ubuntu\/materials\/mm10_reference\/mm10_chr18.gtf",
+    "star_index": "\/home\/ubuntu\/materials\/mm10_reference\/STAR",
+    "save_trimmed": true,
+    "salmon_quant_libtype": "A",
+    "extra_salmon_quant_args": "'--numBootstraps 10'",
+    "save_unaligned": true,
+    "config_profile_name": "pawsey_nimbus.config,extra_args.config",
+    "max_cpus": 2,
+    "max_memory": "6.GB",
+    "multiqc_config": "\/home\/ubuntu\/run_then_launch\/multiqc_config.yaml",
+    "show_hidden_params": true
+}
+
+```
+
+This did not work, despite that it worked in Exercise 5:
+```
+nextflow run nf-core/rnaseq -r 3.10.1 -profile singularity,c2r8 -resume -params-file nf-params.json
+```
+
+The error:
+```
+ubuntu@calidev:~/run_then_launch$ nextflow run nf-core/rnaseq -r 3.10.1 -profile singularity,c2r8 -resume -params-file nf-params.json
+N E X T F L O W  ~  version 22.10.7
+Unknown configuration profile: 'c2r8'
+
+Did you mean one of these?
+    crg
+```
+
+
+Had to go back and add the CPU and MEM to the JSON, then run without 'c2r8':
+
+```
+nextflow run nf-core/rnaseq -r 3.10.1 -profile singularity -resume -params-file nf-params.json
+```
+
+Another issue: when using `--numBootstraps 10` for salmon quant, received an error `PLEASE UPGRADE SALMON`
+- image is version 1.9, latest is 1.10.1
+- When I replaced the extra salmon arg from botstrap to `--gcbias`, the run completed successfully. 
+- I dont want to use GC bias as the example, because the mqc report shows no bias! 
+- Need to fix the version or find a different example flag 
+
+
+
+
+
+
+
 
 ---------------------
 ## Troubleshooting
