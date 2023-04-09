@@ -30,7 +30,6 @@
 ### Updated exercsie 1 run command 
 
 - Need to ensure that the samplesheet.csv file has the correct path to the fastqs based on final working directory structure
-- Need to sed 'forward' with 'unstranded' within samplesheet.csv 
 - Relative to GS command 
     - removed the dag/report/trace (rnaseq conf will put them in the params.outdir with timestamp so we dont need to worry about overwrite error/warn) 
     - replaced samples.tsv with samplesheet.csv
