@@ -42,6 +42,19 @@ nextflow run ../rnaseq/main.nf \
   --outdir Exercise4
 ```
 
+UPDATE 9/4/23: 
+- Used GS nimbus test config, ran this:
+
+```
+nextflow run ../rnaseq/main.nf \
+	-c pawsey_nimbus.config \
+	-profile singularity,c2r8 \
+	-params-file params.yaml \
+	-resume \
+	--outdir Exercise4
+```
+- Worked great, everything pulled from cache as expected, finished in a few seconds.
+
 While it is running, observe that all of the other anaylsis steps are restored from cache except for multiqc. 
 
 - The changes we made above added the mouse transcriptome GC profile as a track to the fastQC per-sequence GC content plot.
