@@ -95,6 +95,17 @@ nextflow run \
     --outdir Exercise5 \
     -resume
 ```
+Updated 9/4/23: Used GS test pawsey nimbus config
+- Worked as expected (ie all samples failed so we know the second config was also being read - very cool, I did not know you could specify 2 custom configs like this without using the includeConfig syntax) 
+
+```
+nextflow run ../rnaseq/main.nf \
+	-c pawsey_nimbus.config,extra_args.config \
+	-profile singularity,c2r8 \
+	-params-file params.yaml \
+	-resume \
+	--outdir Exercise5
+```
 
 Given we have applied the `-resume` flag, what tasks do you expect to be re-run, and what outputs do you expect to be taken from cache?
 - Cached output for initial fastqc
