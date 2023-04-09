@@ -54,10 +54,8 @@ sudo chmod ugo+rwx /usr/local/bin/nextflow
   - Copy the JSON params to a file in your working directory and save it as `nf-params.json`
   - Copy the nextflow run command and execute it in your VM
   
-  
-  ```
-  
-  {
+```
+{
     "input": "\/home\/ubuntu\/materials\/samplesheet.csv",
     "outdir": "Exercise6",
     "email": "cali.willet@sydney.edu.au",
@@ -74,15 +72,16 @@ sudo chmod ugo+rwx /usr/local/bin/nextflow
     "multiqc_config": "\/home\/ubuntu\/run_then_launch\/multiqc_config.yaml",
     "show_hidden_params": true
 }
-
 ```
 
 This did not work, despite that it worked in Exercise 5:
+
 ```
 nextflow run nf-core/rnaseq -r 3.10.1 -profile singularity,c2r8 -resume -params-file nf-params.json
 ```
 
 The error:
+
 ```
 ubuntu@calidev:~/run_then_launch$ nextflow run nf-core/rnaseq -r 3.10.1 -profile singularity,c2r8 -resume -params-file nf-params.json
 N E X T F L O W  ~  version 22.10.7
