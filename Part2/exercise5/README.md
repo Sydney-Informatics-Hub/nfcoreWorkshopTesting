@@ -20,7 +20,15 @@ For example, look at the parameter options for the tool Trim Galore, under [Read
 
 You will see 8 parameters, 6 of which are Trim Galore-specific parameters and the last 2 which are nf-core parameters. 
 
-Now look at the full list of [Trim Galore parameters](https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md#general-options). It would be very unwieldy for nf-core to cover all of the available options for this tool and every other in the workflow on their main workflow page!
+Now look at the full list of trim_galore parameters:
+Option 1) View the [Trim Galore parameters online](https://github.com/FelixKrueger/TrimGalore/blob/master/Docs/Trim_Galore_User_Guide.md#general-options)
+Option 2) Use the command line help:
+```
+singularity run ~/singularity/depot.galaxyproject.org-singularity-trim-galore-0.6.7--hdfd78af_0.img
+trim_galore --help | more
+exit
+```
+It would be very unwieldy for nf-core to cover all of the available options for this tool and every other in the workflow on their main workflow page!
 
 You have the flexibility to use ANY tool parameter, whether a parameter is specified by the nf-core workflow parameters page or not, by providing these as **extra arguments**.
  
@@ -84,7 +92,7 @@ nextflow run \
     -profile singularity \
     -params-file params.yaml \
     -c extra_args.config \
-    --outdir exercise5 \
+    --outdir Exercise5 \
     -resume
 ```
 
@@ -96,16 +104,7 @@ How long did your run take? Was the run time what you expected? Do you notice an
 
 <insert STDOUT screenshots?> 
 
-Open the file multiqc_report.html. 
-
-Option 1: You are working in VS Code
-- Go to extentsions (Control + Shift + X) and install 'Live Server' (Ritwick Dey).
-- On the Explorer pane where you have your working directory open, navigate to the `./exercise5/multiqc/star_salmon` directory and right click the file `multiqc_report.html`. 
-- Select 'Open with Live Server' and the HTML file will open in your browser.
-
-Option 2: You are not working in VS Code
-- Copy the file `./exercise5/multiqc/star_salmon/multiqc_report.html` to your local machine, and double-click it to open in browser
-- Eg for Windows open Gitbash or WSL, for Mac use Terminal. Change directory to Downloads or somewhere else appropriate, then run `scp ubuntu@<IP>:/home/ubuntu/<nfcoreWorkshop>/exercise5/multiqc/star_salmon/multiqc_report.html .`
+Open the file multiqc_report.html (use Liver Server in VS Code or scp to take a local copy). 
 
 On the navigation headings on the left, click on `Fail trimmed samples`. Observe that all 6 samples have < 5,000 reads remaining after trimming. 
 
@@ -137,19 +136,18 @@ Option 1) Trim galore log
 more ./exercise5/trimgalore/SRR3473988.fastq.gz_trimming_report.txt
 ```
 
-Option 2) command.sh file 
-- Every task that is run is recorded in a file `.command.sh` within the task execution directory. 
-- You can find that file easily if you know the process execution hash. 
-- The hash is used to name the work direcory for a task. 
-- If you know the hash, you can run `ls -la <hash>*` to find the directory and view the hidden command files. 
+Option 2) Process execution script
+- Recall that every task that is run is recorded in a file `.command.sh` within the task execution directory. 
+- Use the nextflow log tool to find the name of this run (unless you have remembered it!) 
+- Then issue the commands as before to find the `trim_galore` process execution scripts:
 
-For example, a task with process execution hash `53/739513`:
 ```
-ls -la ./work/53/739513*
+run_name=<ENTER_YOUR_RUN_NAME>
+tool=trim_galore
+nextflow log ${run_name} | while read line; do      cmd=$(ls ${line}/.command.sh 2>/dev/null);     if grep -q $tool $cmd;     then          echo $cmd;     fi; done 
 ```
-shows the directory listing of `./work/53/739513784564d32ff5c7d798b7c387`, including the relevant `.command.sh` file. 
 
-Viewing this file will show the actual command used to run the task, eg:
+Open the file or use `cat` or a text editor to view it. 
 
 < insert screenshot instead of code>
 
@@ -169,6 +167,7 @@ cat <<-END_VERSIONS > versions.yml
 END_VERSIONS
 ```
 
+If this were a real analysis, we would re-run with a reduced quality threshold of 30, which is higher than the original default of 20 thus ggiving us that additional stringency we were after while hopefully not being too high to fail all of the samples! 
 
 
 ---------------------
