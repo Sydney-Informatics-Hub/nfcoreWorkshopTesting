@@ -6,7 +6,7 @@
 ## Testing reflection
 
 ---------------------
-## Content draft 
+## Content draft - NEEDS TO BE UPDATED WITH GEORGIE'S NIMBUS CONFIG ONCE IT'S FINALISED
 
 https://nf-co.re/rnaseq/parameters#config_profile_url
 
@@ -25,32 +25,15 @@ Open local file `nextflow.config` and add the following lines:
 params.max_cpus = 2
 params.max_memory = '6 GB'
 params.outdir = "Results"
-// Produce a workflow diagram and HTML reports  
-dag {
-        enabled = true
-        file = "${params.outdir}/dag.svg"
-}
-report {
-        enabled = true
-        file = "${params.outdir}/report.html"
-}
-timeline {
-        enabled = true
-        file = "${params.outdir}/timeline.html"
-}
-trace {
-        enabled = true
-        file = "${params.outdir}/trace.txt"
-}
 ```
 
 ### Run 
-Once you have saved your `nextflow.config` file, run the following: 
+Once you have saved your `nextflow.config` file, run the following - much neater having our parameters within a params file and configuration settings within a config file! 
 
 ```
 nextflow run ../rnaseq/main.nf \
 	-profile singularity \
-	-params-file exercise2_params.yaml \
+	-params-file params.yaml \
 	-resume
 ```
 
@@ -58,14 +41,14 @@ Quick quiz:
 - Where do you think your output will be?
   - It's not in Results!
   - The default `outdir` value specified in our custom config has been overridden by the value specified in our params.yaml. Remember the order of priority!
-- If we wanted to run this analysis writing outputs to a directory named `exercise3`, how would we do that without changing the configuration or paramaters file?
+- If we wanted to run this analysis writing outputs to a directory named `Exercise3`, how would we do that without changing the configuration or paramaters file?
 	- Insert cool drop down 'Answer' box
 ```
 nextflow run ../rnaseq/main.nf \
 	-profile singularity \
 	-params-file exercise2_params.yaml \
 	-resume \
-	--outdir exercise3
+	--outdir Exercise3
 ```
 
 
