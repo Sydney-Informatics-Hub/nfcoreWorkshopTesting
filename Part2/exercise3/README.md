@@ -6,7 +6,33 @@
 ## Testing reflection
 
 ---------------------
-## Content draft - NEEDS TO BE UPDATED WITH GEORGIE'S NIMBUS CONFIG ONCE IT'S FINALISED
+## Content draft - USED GS TEST NIMBUS CONFIG
+
+- Copied the pawsey_nimbus.config to working directory
+- Ran this:
+
+```
+nextflow run ../rnaseq/main.nf \
+	-c pawsey_nimbus.config \
+	-profile singularity,c2r8 \
+	-params-file params.yaml \
+	-resume \
+	--outdir Exercise3
+```
+
+Worked great, everything pulled from cache as expected, finished in a few seconds. 
+
+Most of the time for this exercise will be describing the configuration profile, where its hosted, whats in it, etc
+
+Perhaps adding info on using multiple configs with `includeConfig` eg
+
+```
+# Within one config, call on another with this line:
+includeConfig ‘nextflow_custom.config’
+```
+
+---------------------
+## Content draft 
 
 https://nf-co.re/rnaseq/parameters#config_profile_url
 
