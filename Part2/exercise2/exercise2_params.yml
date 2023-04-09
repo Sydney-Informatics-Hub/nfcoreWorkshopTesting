@@ -1,8 +1,0 @@
-input: "/home/ubuntu/nfcoreWorkshopTesting/materials/samplesheet.csv" 
-outdir: "/home/ubuntu/nfcoreWorkshopTesting/exercise2"
-gtf: "/home/ubuntu/nfcoreWorkshopTesting/materials/mm10_reference/mm10_chr18.gtf"
-fasta: "/home/ubuntu/nfcoreWorkshopTesting/materials/mm10_reference/mm10_chr18.fa"
-star_index: "/home/ubuntu/nfcoreWorkshopTesting/materials/mm10_reference/STAR" 
-aligner : "hisat2"
-save_trimmed  : true
-three_prime_clip_r1 : 5
