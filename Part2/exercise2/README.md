@@ -44,8 +44,9 @@ We will create a YAML format file with our inputs. This file can then be saved w
 We would like to make some changes to the previous run: 
  - [Correct for our strand failure](https://nf-co.re/rnaseq/3.10.1/parameters#salmon_quant_libtype) 
  - [Save the trimmed reads to the output directory](https://nf-co.re/rnaseq/3.10.1/parameters#save_trimmed)
- - Save the reads that fail to map to the mouse transcriptome. Can you find a parameter that will allow you to do this? 
- - Answer: There is no specific parameter described in the rnaseq docs to do this, BUT a new feature from v 3.10 enables you to add any STAR or salmon flag! See https://nf-co.re/rnaseq/3.10.1/parameters#extra_salmon_quant_args 
+ - [Save the reads that fail to map to the mouse transcriptome](https://nf-co.re/rnaseq/3.10.1/parameters#save_unaligned) 
+ - Perform bootstrapping during quantification. Can you find the parameter that allows us to do this?
+    - Answer: There is no specific parameter described in the rnaseq docs to do this, BUT a new feature from v 3.10 enables you to add any STAR or salmon flag! See https://nf-co.re/rnaseq/3.10.1/parameters#extra_salmon_quant_args 
  
 ### How can we know what tool flags are applied by default? 
 - One method is to find the process script within the rnaseq workflow and examine the syntax
@@ -96,7 +97,7 @@ salmon --help
 salmon --help-alignment
 ```
 
-Scroll through the parameters, there are many available depending on your research project. Today we are looking to capture the unmapped read IDs, and this is the last salmon flag in the list: `--writeUnmappedNames`. 
+Scroll through the parameters, there are many available depending on your research project. Today we are looking to perform bootstrapping, and this can be specified with the flag `--numBootstraps`. 
 
 Open a file `params.yaml` and add the following:
 
@@ -107,8 +108,9 @@ gtf: "<path>/materials/mm10_reference/mm10_chr18.gtf"
 fasta: "<path>/materials/mm10_reference/mm10_chr18.fa"
 star_index: "<path>/materials/mm10_reference/STAR" 
 save_trimmed  : true
+save_unaligned  : true
 salmon_quant_libtype : A
-extra_salmon_quant_args : '--writeUnmappedNames'
+extra_salmon_quant_args : '--numBootstraps 10'
 ```
 Any of the [workflow parameters](https://nf-co.re/rnaseq/3.10.1/parameters) can be added to the parameters file in this way. 
 
@@ -126,7 +128,7 @@ nextflow run ../rnaseq/main.nf \
 
 Check the output:
   - Observe that there are now trimmed fastq files within the ./Exercise2/trimgalore directory that were not included in ./Exercise1/trimglaore, because we added the 'save_trimmed' parameter. 
-  - Observe that there are now unmapped files in the ./Exercise2/star_salmon directory - HAVE MESSAGED CHRIS ON SLACK ABOUT THIS, I CANNOT FIND THE UNMAPPED OUTPUTS!
+  - Observe that there are now unmapped files in the ./Exercise2/star_salmon/unmapped directory 
   
 Once again, issue the nextflow log command - observe that you now have info reported for 2 runs (or more, if you had repeat commands due to errors etc) 
 ```
@@ -149,7 +151,7 @@ salmon quant \
     --libType=A \
     -t genome.transcripts.fa \
     -a SRR3473984.Aligned.toTranscriptome.out.bam \
-    --writeUnmappedNames \
+    --numBootstraps 10 \
     -o SRR3473984
 ```
 
@@ -159,15 +161,9 @@ Now open the mutliqc report and observe that the fail strandedness check is no l
 ---------------------
 ## Troubleshooting
 
-Run time was 1min4s, and all 200 tasks pulled from cache. This is not expected - STAR should have been re-run on the updated fastq input. The trimgalore outdir DOES contain the trimmed reads as requested. Why was the mapping pulled from cache when the input reads have changed?
-
-```
-ubuntu@small-testing:~/nfcoreWorkshopTesting$ zcat exercise2/results/trimgalore/SRR3473984_trimmed.fq.gz > trimmed
-ubuntu@small-testing:~/nfcoreWorkshopTesting$ zcat materials/fastqs/SRR3473984_selected.fastq.gz > notTrimmed
-ubuntu@small-testing:~/nfcoreWorkshopTesting$ sdiff -s trimmed notTrimmed | wc -l
-68758
-```
-
+- During exercise 6 launch, the `numBootstraps` arg caused the run to die! The error was to upgrade salmon. The container version I have is 1.9, latest salmon is 1.10.1. The rnaseq pipeline version used for the ex 6 run was 3.10.1. This is the same version that i have cloned locally from git. 
+- I am very confused as to why the salmon bootstrapping DID work for this exercise, but did not for exercise 6, when the versions are the same
+- The v 1.9 salmon worked fine for ex6 when i changed the extras salmon arg to something else (gcBias instead of numBootstraps) 
 
 ---------------------
 ## Links/resources 
