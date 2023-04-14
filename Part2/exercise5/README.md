@@ -45,6 +45,8 @@ def args = task.ext.args ?: ''
 
 We can use the `ext.args` variable to parse any tool parameters to the tool command run by the process. Neat huh! 
 
+? Possibly also look at `conf/modules.config` (Chris mentions this in his part) - observe that the ext.args is present in all processes, so users can apply this to anything not just trim_galore
+
 Now look at the actual `trim_galore` run command (starting at line 42 or 58). 
 
 We can see that nf-core has hardcoded the parameters `cores` and `gzip`, and also fed in the `paired` argument if the input is detected as paired-end reads. 
@@ -82,7 +84,16 @@ process {
     }
 }
 ``` 
-NOTE TO US - we need to add a part in here about how to find the correct name for a process to specify in the above - my first attempt using the full process name (as per doc) DID NOT WORK. See Troubleshooting section below. Clarify with Chris H then add in ... 
+In part 1, Chris shows how to build the full execution path for a process using Trim Galore as example. He also suggests to look at `conf/modules.config` - I think this is probably easier and more clear than trying to build back all the levels and risk missing one, missing a : character etc. In Which case this content should use the below syntax, to be consistent with that: 
+
+```
+process {
+    withName: '.*:FASTQ_FASTQC_UMITOOLS_TRIMGALORE:TRIMGALORE' {   
+        ext.args    =   '--quality 40'
+    }
+}
+```
+
 
 We need to instruct nextflow to use the custom config, and we do this with the `-c` flag. 
 
